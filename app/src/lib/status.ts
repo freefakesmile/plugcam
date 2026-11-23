@@ -29,6 +29,8 @@ export function statusInfo(s: Snapshot): StatusInfo {
       return { tone: "live", title: t("status.streaming"), hint: "" };
     case "connecting":
       return { tone: "busy", title: t("status.connecting"), hint: "" };
+    case "standby":
+      return { tone: "ok", title: t("status.standby"), hint: t("status.standby.hint") };
     case "reconnecting":
       return {
         tone: "busy",

@@ -45,6 +45,9 @@ pub struct Settings {
     /// No live picture in the window: saves the processor and graphics work of making and
     /// drawing it while the camera keeps working.
     pub hide_preview: bool,
+    /// With the camera on, the phone streams only while some app has "Plugcam Camera" open,
+    /// like a webcam whose light comes on only in a call. Off: it streams all the time.
+    pub stream_on_demand: bool,
     /// UI language code (see `app::i18n`); `None` = same as Windows.
     pub language: Option<String>,
     /// Lenses that sent no picture, by phone model; hidden from the lens picker.
@@ -113,6 +116,7 @@ impl Default for Settings {
             close_to_tray: true,
             auto_start_camera: false,
             hide_preview: false,
+            stream_on_demand: false,
             language: None,
             broken_cameras: BTreeMap::new(),
             check_updates: true,

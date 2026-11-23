@@ -37,6 +37,13 @@ const RETRY_DELAY: Duration = Duration::from_secs(2);
 const NO_PICTURE_RETRY_DELAY: Duration = Duration::from_secs(15);
 const STATS_PERIOD: Duration = Duration::from_secs(5);
 
+/// Streaming on demand: an app has to keep the camera open this long before the phone starts
+/// (apps also open it for a moment to read its formats), and the phone stops this long after the
+/// last app let go (switching apps, or leaving and joining a call, does not restart it).
+const DEMAND_START_AFTER: Duration = Duration::from_secs(1);
+const DEMAND_STOP_AFTER: Duration = Duration::from_secs(10);
+const DEMAND_POLL: Duration = Duration::from_millis(100);
+
 /// Seconds between key frames over Wi-Fi, so skipping ahead after a hiccup takes under a second.
 const WIFI_KEY_FRAME_INTERVAL: u32 = 1;
 /// Starting bit rate over Wi-Fi (the "Economy" one), unless the user's is lower.
@@ -75,6 +82,8 @@ pub struct PipelineConfig {
     pub color: ColorAdjust,
     /// Sides cut off the picture as shown; can change while streaming.
     pub crop: Crop,
+    /// Stream only while some app has "Plugcam Camera" open; can change while running.
+    pub on_demand: bool,
     /// Record the raw video stream (packets after the codec id) for test fixtures.
     pub dump: Option<PathBuf>,
     /// Where to offer frames for the app window's preview.
@@ -96,6 +105,8 @@ pub type Wanted = Arc<dyn Fn(&str) -> bool + Send + Sync>;
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Status {
     WaitingForDevice,
+    /// Streaming on demand and no app has the camera open: the phone is not streaming.
+    Standby,
     Connecting { serial: String },
     Streaming { serial: String, device: String, width: u32, height: u32 },
     /// A Wi-Fi phone stopped answering; the camera keeps the last picture while it is
@@ -125,6 +136,7 @@ struct Shared {
     color: AtomicU32,
     /// `Crop::to_bits`.
     crop: AtomicU64,
+    on_demand: AtomicBool,
     /// The phone to use when it is ready; can change without restarting the stream.
     preferred: Mutex<Option<String>>,
     video: Mutex<Option<TcpStream>>,
@@ -145,6 +157,7 @@ impl Pipeline {
             rotation: AtomicU16::new(config.rotation),
             color: AtomicU32::new(config.color.to_bits()),
             crop: AtomicU64::new(config.crop.to_bits()),
+            on_demand: AtomicBool::new(config.on_demand),
             preferred: Mutex::new(config.serial.clone()),
             video: Mutex::new(None),
             control: Mutex::new(None),
@@ -180,6 +193,12 @@ impl Pipeline {
 
     pub fn set_crop(&self, crop: Crop) {
         self.shared.crop.store(crop.to_bits(), Ordering::Relaxed);
+    }
+
+    /// Stream only while an app has the camera open. Turned off, a waiting pipeline starts
+    /// streaming at once; turned on, a stream no app uses stops after `DEMAND_STOP_AFTER`.
+    pub fn set_on_demand(&self, on: bool) {
+        self.shared.on_demand.store(on, Ordering::Relaxed);
     }
 
     /// The phone to go back to after the stream breaks; the running stream is left alone.
@@ -240,8 +259,15 @@ fn run(config: PipelineConfig, vcam: VirtualCamera, shared: &Shared, on_status: 
     let mut wifi_failures = 0u32;
     // The phone the two above are about; another phone starts both over.
     let mut last_serial: Option<String> = None;
+    // Streaming on demand: an app had the camera open when the last session started, so going
+    // round again (an error, a phone that came back) need not wait for it to settle.
+    let mut in_use = false;
 
     while !stopped() {
+        if !wait_for_app(&vcam, shared, &mut status, in_use) {
+            break;
+        }
+        in_use = true;
         let preferred = shared.preferred.lock().unwrap().clone();
         let device = match pick_device(&config.adb, preferred.as_deref(), &wanted) {
             Ok(Some(device)) => device,
@@ -301,10 +327,17 @@ fn run(config: PipelineConfig, vcam: VirtualCamera, shared: &Shared, on_status: 
         if stopped() {
             break;
         }
+        if let Err(StreamEnd::Unused) = result {
+            log::info!("no app has used the camera for {}s; the phone stops until one does", DEMAND_STOP_AFTER.as_secs());
+            vcam.send_frame(converter.black());
+            wifi_failures = 0;
+            in_use = false;
+            continue;
+        }
         if !wifi {
             vcam.send_frame(converter.dim()); // make the frozen picture look disconnected
             match result {
-                Ok(()) | Err(StreamEnd::Congested) => pause(RETRY_DELAY),
+                Ok(()) | Err(StreamEnd::Congested | StreamEnd::Unused) => pause(RETRY_DELAY),
                 Err(StreamEnd::NoPicture) => {
                     status(Status::NoPicture { serial });
                     pause(NO_PICTURE_RETRY_DELAY);
@@ -330,7 +363,7 @@ fn run(config: PipelineConfig, vcam: VirtualCamera, shared: &Shared, on_status: 
         };
         wifi_rate.session_ended(streamed, congested);
         match result {
-            Ok(()) | Err(StreamEnd::Congested) => {}
+            Ok(()) | Err(StreamEnd::Congested | StreamEnd::Unused) => {}
             Err(StreamEnd::NoPicture) => {
                 vcam.send_frame(converter.dim());
                 status(Status::NoPicture { serial });
@@ -371,6 +404,52 @@ fn run(config: PipelineConfig, vcam: VirtualCamera, shared: &Shared, on_status: 
     }
     status(Status::Stopped);
     vcam
+}
+
+/// Streaming on demand: returns once an app has had the camera open for `DEMAND_START_AFTER`
+/// (as soon as it is open when `in_use`), at once when streaming is not on demand, and `false`
+/// when the pipeline is stopped.
+fn wait_for_app(vcam: &VirtualCamera, shared: &Shared, status: &mut impl FnMut(Status), in_use: bool) -> bool {
+    let after = if in_use { Duration::ZERO } else { DEMAND_START_AFTER };
+    let mut opened = Hold::default();
+    let mut standby = false;
+    loop {
+        if shared.stop.load(Ordering::SeqCst) {
+            return false;
+        }
+        if !shared.on_demand.load(Ordering::Relaxed) {
+            return true;
+        }
+        let connected = vcam.is_connected();
+        if opened.held(connected, Instant::now(), after) {
+            if standby {
+                log::info!("an app opened the camera; starting the phone");
+            }
+            return true;
+        }
+        if !connected && !standby {
+            status(Status::Standby);
+            standby = true;
+        }
+        std::thread::sleep(DEMAND_POLL);
+    }
+}
+
+/// Whether a condition has held for a while without a break.
+#[derive(Default)]
+struct Hold {
+    since: Option<Instant>,
+}
+
+impl Hold {
+    /// Records the condition at `now`; true once it has been true for `after` in a row.
+    fn held(&mut self, condition: bool, now: Instant, after: Duration) -> bool {
+        if !condition {
+            self.since = None;
+            return false;
+        }
+        now.duration_since(*self.since.get_or_insert(now)) >= after
+    }
 }
 
 /// Connects a Wi-Fi phone that stopped answering again, a few times, as long as it is still
@@ -462,6 +541,8 @@ fn retry_delay(failures: u32) -> Duration {
 
 enum StreamEnd {
     NoPicture,
+    /// Streaming on demand and no app has used the camera for `DEMAND_STOP_AFTER`.
+    Unused,
     /// Frames kept arriving late: the network cannot carry this bit rate.
     Congested,
     Broken(String),
@@ -516,6 +597,7 @@ fn stream(
     let mut frame_error = None;
     let mut stall_timeout_set = false;
     let mut catch_up = link.wifi.then(CatchUp::default);
+    let mut unused = Hold::default();
 
     loop {
         // A stop that came while the server was starting had no socket to shut down, and a
@@ -579,6 +661,9 @@ fn stream(
                 .map_err(|e| e.to_string())?;
                 if let Some(e) = frame_error.take() {
                     return Err(e.into());
+                }
+                if shared.on_demand.load(Ordering::Relaxed) && unused.held(!vcam.is_connected(), Instant::now(), DEMAND_STOP_AFTER) {
+                    return Err(StreamEnd::Unused);
                 }
                 if *frames > 0 && !stall_timeout_set {
                     socket.set_read_timeout(Some(stall_timeout)).map_err(|e| e.to_string())?;
@@ -697,6 +782,25 @@ impl Read for Tee<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn hold_needs_the_condition_without_a_break() {
+        let t0 = Instant::now();
+        let s = |ms| t0 + Duration::from_millis(ms);
+        let after = Duration::from_millis(1000);
+        let mut h = Hold::default();
+        assert!(!h.held(true, s(0), after));
+        assert!(!h.held(true, s(900), after));
+        // A moment without it (an app only reading the camera's formats) starts over.
+        assert!(!h.held(false, s(950), after));
+        assert!(!h.held(true, s(1000), after));
+        assert!(!h.held(true, s(1900), after));
+        assert!(h.held(true, s(2000), after));
+        assert!(h.held(true, s(5000), after));
+        assert!(!h.held(false, s(5001), after));
+        // Zero means at once.
+        assert!(Hold::default().held(true, s(0), Duration::ZERO));
+    }
 
     const MS: u64 = 1000;
 

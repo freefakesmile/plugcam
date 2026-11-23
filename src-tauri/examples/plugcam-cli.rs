@@ -156,6 +156,8 @@ fn run(args: Args) -> Result<(), String> {
                 let p: Vec<f64> = v.split(',').map(|n| n.trim().parse().unwrap_or(0.0)).chain([0.0; 4]).collect();
                 plugcam::frame::Crop::percent(p[0], p[1], p[2], p[3])
             }),
+            // PLUGCAM_ON_DEMAND=1 streams only while an app has the camera open.
+            on_demand: std::env::var_os("PLUGCAM_ON_DEMAND").is_some(),
             dump: args.dump,
             preview: None,
             on_zoom: None,

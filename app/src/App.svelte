@@ -67,6 +67,7 @@
 
   function waitingStage(s: Snapshot) {
     const kind = s.status?.kind;
+    if (kind === "standby") return { title: t("status.standby"), hint: t("status.standby.hint") };
     if (s.device?.state === "device" && kind !== "error" && kind !== "noPicture" && kind !== "reconnecting") {
       return { title: t("preview.waiting"), hint: "" };
     }

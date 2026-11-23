@@ -365,6 +365,14 @@ impl FrameConverter {
         &self.out
     }
 
+    /// Makes the output frame black; shown while no app uses the camera (streaming on demand),
+    /// so the next app does not first get a picture from long ago.
+    pub fn black(&mut self) -> &[u8] {
+        self.out.fill(0);
+        self.placement = None;
+        &self.out
+    }
+
     pub fn convert(&mut self, frame: &Nv12Frame) -> Result<&[u8], FrameError> {
         // The part of the picture that is kept; all of it unless cropped (or it already was).
         let (cx, cy, w, h) = if frame.prescaled {

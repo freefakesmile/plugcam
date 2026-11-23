@@ -147,6 +147,11 @@
         checked={s.closeToTray}
         onchange={(v) => api.updateSettings({ closeToTray: v })} />
       <Toggle label={t("set.autoStart")} checked={s.autoStartCamera} onchange={(v) => api.updateSettings({ autoStartCamera: v })} />
+      <Toggle
+        label={t("set.onDemand")}
+        hint={t("set.onDemand.hint")}
+        checked={s.streamOnDemand}
+        onchange={(v) => api.updateSettings({ streamOnDemand: v })} />
     </div>
   </section>
 

@@ -537,6 +537,7 @@ impl Controller {
             rotation: st.settings.rotation,
             color: st.settings.color,
             crop: st.settings.crop,
+            on_demand: st.settings.stream_on_demand,
             dump: None,
             preview: Some(self.preview.clone()),
             on_zoom: Some(Arc::new(move |z| {
@@ -578,6 +579,10 @@ impl Controller {
         if !matches!(status, Status::Streaming { .. }) {
             st.fps = 0.0;
             st.bitrate = 0;
+        }
+        if status == Status::Standby {
+            // The camera shows black until an app opens it; so does the preview.
+            self.preview_clear();
         }
         st.status = Some(status);
         self.publish(&mut st);
@@ -630,6 +635,7 @@ impl Controller {
             p.set_rotation(new.rotation);
             p.set_color(new.color);
             p.set_crop(new.crop);
+            p.set_on_demand(new.stream_on_demand);
         }
         if old.launch_at_login != new.launch_at_login {
             super::set_launch_at_login(&self.app, new.launch_at_login);
@@ -1280,7 +1286,7 @@ fn status_serial(status: &Status) -> Option<&str> {
         | Status::Streaming { serial, .. }
         | Status::Reconnecting { serial, .. }
         | Status::NoPicture { serial } => Some(serial),
-        Status::WaitingForDevice | Status::Error { .. } | Status::Stopped => None,
+        Status::WaitingForDevice | Status::Standby | Status::Error { .. } | Status::Stopped => None,
     }
 }
 

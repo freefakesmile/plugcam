@@ -139,6 +139,11 @@ stream, same picture, on an i7-13700K with an RTX 3080 Ti:
 
 How it works, how to build the DLL and how to measure it: [docs/decoder.md](docs/decoder.md).
 
+With **Stream only while an app uses the camera** (Settings), Plugcam can stay on in the tray
+all day: the phone's camera turns on when Zoom, Meet or another app opens "Plugcam Camera"
+(frames arrive about 3 seconds later) and off 10 seconds after the app lets go. In between,
+Plugcam takes about 10 ms/s of CPU and the phone is not streaming.
+
 ## Get started
 
 1. **Install.** Download `Plugcam_x.y.z_x64-setup.exe` from the
