@@ -1,8 +1,8 @@
 <script lang="ts">
   // Live copy of what "Plugcam Camera" shows. Frames come as JPEG over a Tauri channel,
-  // and only while the window is visible.
+  // and only while the window is visible and the user has not hidden the preview.
   import { onMount } from "svelte";
-  import { Video, LoaderCircle, Crop as CropIcon } from "@lucide/svelte";
+  import { Video, LoaderCircle, Crop as CropIcon, Eye, EyeOff } from "@lucide/svelte";
   import { subscribePreview, onPreviewClear, setPreviewActive, setPreviewWidth } from "./api";
   import type { Crop } from "./api";
   import CropOverlay from "./CropOverlay.svelte";
@@ -18,6 +18,8 @@
     crop,
     frame,
     picture,
+    hidden,
+    onhidden,
   }: {
     streaming: boolean;
     cameraOn: boolean;
@@ -33,6 +35,9 @@
     frame: [number, number];
     /** The phone's picture as shown (after rotation); `null` while not streaming. */
     picture: [number, number] | null;
+    /** The user hid the preview: no frames are made, the stage says so. */
+    hidden: boolean;
+    onhidden: (hidden: boolean) => void;
   } = $props();
 
   let canvas: HTMLCanvasElement;
@@ -44,7 +49,7 @@
     // about 500 MB more memory for nothing.
     const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
     subscribePreview(async (jpeg) => {
-      if (drawing) return; // drop a frame rather than queue them
+      if (drawing || hidden) return; // drop a frame rather than queue them
       drawing = true;
       try {
         const bitmap = await createImageBitmap(new Blob([jpeg], { type: "image/jpeg" }));
@@ -97,7 +102,7 @@
   });
 
   $effect(() => {
-    if (!cameraOn) hasFrame = false;
+    if (!cameraOn || hidden) hasFrame = false;
   });
 </script>
 
@@ -106,7 +111,14 @@
 
   {#if !hasFrame}
     <div class="empty">
-      {#if cameraOn}
+      {#if cameraOn && hidden}
+        <EyeOff size={32} aria-hidden="true" />
+        <span class="title">{t("preview.hidden")}</span>
+        <span class="hint">{t("preview.hidden.hint")}</span>
+        <button class="show-btn" onclick={() => onhidden(false)}>
+          <Eye size={16} aria-hidden="true" />{t("preview.show")}
+        </button>
+      {:else if cameraOn}
         <LoaderCircle size={28} class="spin" aria-hidden="true" />
         <span class="title">{waiting.title}</span>
         {#if waiting.hint}<span class="hint">{waiting.hint}</span>{/if}
@@ -121,9 +133,14 @@
   {#if streaming && hasFrame}
     <div class="chip" aria-hidden="true"><span class="dot"></span>{live}</div>
     {#if !cropEdit.active}
-      <button class="crop-btn" title={t("crop.edit")} aria-label={t("crop.edit")} onclick={() => startCropEdit(crop)}>
-        <CropIcon size={18} />
-      </button>
+      <div class="tools">
+        <button class="tool-btn" title={t("preview.hide")} aria-label={t("preview.hide")} onclick={() => onhidden(true)}>
+          <EyeOff size={18} />
+        </button>
+        <button class="tool-btn" title={t("crop.edit")} aria-label={t("crop.edit")} onclick={() => startCropEdit(crop)}>
+          <CropIcon size={18} />
+        </button>
+      </div>
     {/if}
   {/if}
 
@@ -210,40 +227,60 @@
     height: 24px;
     padding: 0 10px 0 8px;
     border-radius: 12px;
-    background: rgb(0 0 0 / 0.55);
-    backdrop-filter: blur(8px);
+    background: rgb(0 0 0 / 0.7);
     color: #fff;
     font-size: 12px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
-  .crop-btn {
+  .tools {
     position: absolute;
     inset-block-start: 12px;
     inset-inline-end: 12px;
+    display: flex;
+    gap: 8px;
+  }
+  .tool-btn {
     display: grid;
     place-items: center;
     width: 32px;
     height: 32px;
     border: 0;
     border-radius: 16px;
-    background: rgb(0 0 0 / 0.55);
-    backdrop-filter: blur(8px);
+    background: rgb(0 0 0 / 0.7);
     color: #fff;
     cursor: pointer;
     opacity: 0;
     transition-property: opacity, scale, background-color;
     transition-duration: 150ms;
   }
-  .stage:hover .crop-btn,
-  .crop-btn:focus-visible {
+  .stage:hover .tool-btn,
+  .tool-btn:focus-visible {
     opacity: 1;
   }
-  .crop-btn:hover {
+  .tool-btn:hover {
     background: rgb(40 40 40 / 0.8);
   }
-  .crop-btn:active {
+  .tool-btn:active {
     scale: 0.94;
+  }
+  .show-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    height: 30px;
+    padding: 0 14px;
+    border: 1px solid rgb(255 255 255 / 0.25);
+    border-radius: 15px;
+    background: rgb(255 255 255 / 0.08);
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .show-btn:hover {
+    background: rgb(255 255 255 / 0.16);
   }
   .dot {
     width: 8px;

@@ -42,6 +42,9 @@ pub struct Settings {
     pub launch_at_login: bool,
     pub close_to_tray: bool,
     pub auto_start_camera: bool,
+    /// No live picture in the window: saves the processor and graphics work of making and
+    /// drawing it while the camera keeps working.
+    pub hide_preview: bool,
     /// UI language code (see `app::i18n`); `None` = same as Windows.
     pub language: Option<String>,
     /// Lenses that sent no picture, by phone model; hidden from the lens picker.
@@ -109,6 +112,7 @@ impl Default for Settings {
             launch_at_login: false,
             close_to_tray: true,
             auto_start_camera: false,
+            hide_preview: false,
             language: None,
             broken_cameras: BTreeMap::new(),
             check_updates: true,

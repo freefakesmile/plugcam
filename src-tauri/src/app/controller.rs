@@ -225,6 +225,8 @@ impl Controller {
         };
         let (status_tx, status_rx) = mpsc::channel::<(u64, Event)>();
 
+        let preview = Arc::new(PreviewSlot::default());
+        preview.set_hidden(settings.hide_preview);
         let this = Arc::new(Self {
             app,
             lifecycle: Mutex::new(()),
@@ -253,7 +255,7 @@ impl Controller {
                 notice: None,
                 last_sent: None,
             }),
-            preview: Arc::new(PreviewSlot::default()),
+            preview,
             adb,
             server_file,
             settings_path,
@@ -635,6 +637,7 @@ impl Controller {
         if old.detailed_log != new.detailed_log {
             crate::diag::set_detailed(new.detailed_log);
         }
+        self.preview.set_hidden(new.hide_preview);
         let usable = usable_cameras(&st, &self.forgotten.lock().unwrap());
         let mode = |s: &Settings| selected_camera(s, &usable).and_then(|c| capture_mode(s, c));
         let needs_restart = old.facing != new.facing

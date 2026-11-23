@@ -2,7 +2,7 @@
 //! stream shows every frame) and only while the window is visible. The pipeline only copies
 //! a frame into the slot; scaling and encoding happen on the preview thread so they never
 //! delay the virtual camera. The JPEG is only as wide as the window shows it: encoding costs
-//! about 11 ns per pixel.
+//! about 11 ns per pixel. The user can hide the preview altogether; then nothing of it is made.
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Condvar, Mutex};
@@ -18,7 +18,10 @@ const MIN_WIDTH: u32 = 160;
 
 #[derive(Default)]
 pub struct PreviewSlot {
+    /// The window is there to show it (open, not minimized).
     enabled: AtomicBool,
+    /// The user hid the preview (`Settings::hide_preview`).
+    hidden: AtomicBool,
     /// Width the window shows the picture at, in physical pixels; 0 = `MAX_WIDTH`.
     width: AtomicU32,
     inner: Mutex<Slot>,
@@ -39,8 +42,13 @@ impl PreviewSlot {
         self.enabled.store(on, Ordering::Relaxed);
     }
 
+    pub fn set_hidden(&self, hidden: bool) {
+        self.hidden.store(hidden, Ordering::Relaxed);
+    }
+
+    /// Whether frames are wanted: the window shows the preview and the user did not hide it.
     pub fn is_enabled(&self) -> bool {
-        self.enabled.load(Ordering::Relaxed)
+        self.enabled.load(Ordering::Relaxed) && !self.hidden.load(Ordering::Relaxed)
     }
 
     pub fn set_width(&self, width: u32) {
@@ -139,6 +147,12 @@ mod tests {
         slot.offer(&[2; 12], 2, 2); // too soon, dropped
         assert_eq!(slot.take(&mut buf, Duration::ZERO), Some((2, 2)));
         assert_eq!(buf, [1; 12]);
+        assert_eq!(slot.take(&mut buf, Duration::ZERO), None);
+
+        // Hidden by the user: nothing is copied, whatever the window says.
+        slot.set_hidden(true);
+        std::thread::sleep(INTERVAL);
+        slot.offer(&[3; 12], 2, 2);
         assert_eq!(slot.take(&mut buf, Duration::ZERO), None);
     }
 

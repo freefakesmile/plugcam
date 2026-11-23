@@ -317,8 +317,7 @@
     min-width: 0;
     padding: 4px 10px;
     border-radius: 12px;
-    background: rgb(0 0 0 / 0.55);
-    backdrop-filter: blur(8px);
+    background: rgb(0 0 0 / 0.7);
     color: #fff;
     font-size: 12px;
     text-wrap: pretty;
@@ -329,8 +328,7 @@
     padding: 0 14px;
     border: 1px solid rgb(255 255 255 / 0.25);
     border-radius: 15px;
-    background: rgb(0 0 0 / 0.6);
-    backdrop-filter: blur(8px);
+    background: rgb(0 0 0 / 0.7);
     color: #fff;
     font: inherit;
     font-size: 13px;

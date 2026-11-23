@@ -4,7 +4,9 @@
 //!
 //! cargo run --release --example replay -- FILE [last-frame.bmp]
 //!
-//! `PLUGCAM_SOFTWARE_DECODE=1` compares with decoding on the CPU.
+//! `PLUGCAM_SOFTWARE_DECODE=1` compares with decoding on the CPU. `PLUGCAM_PACE=1` feeds the
+//! frames at their own pace (30 fps) instead of as fast as they decode, for CPU per second
+//! like when streaming.
 
 use std::io::Write;
 use std::time::{Duration, Instant};
@@ -34,6 +36,8 @@ fn main() {
     let (mut decode_time, mut convert_time) = (Duration::ZERO, Duration::ZERO);
     let cpu_start = process_cpu();
     let wall_start = Instant::now();
+    let pace = std::env::var_os("PLUGCAM_PACE").is_some();
+    let mut first_pts: Option<u64> = None;
 
     while !r.is_empty() {
         let packet = match protocol::read_packet(&mut r) {
@@ -51,6 +55,11 @@ fn main() {
             }
             Packet::Config(c) => decoder.as_mut().unwrap().decode(&c, 0, &mut |_| {}).expect("config"),
             Packet::Frame { pts_us, data, .. } => {
+                if pace {
+                    let first = *first_pts.get_or_insert(pts_us);
+                    let due = wall_start + Duration::from_micros(pts_us - first);
+                    if let Some(wait) = due.checked_duration_since(Instant::now()) { std::thread::sleep(wait); }
+                }
                 let d = decoder.as_mut().unwrap();
                 let started = Instant::now();
                 let mut converting = Duration::ZERO;
@@ -76,6 +85,7 @@ fn main() {
     let per_frame = |d: Duration| d.as_secs_f64() * 1000.0 / frames.max(1) as f64;
     println!("decode {:.2} ms, convert {:.2} ms per frame", per_frame(decode_time), per_frame(convert_time));
     let (wall, cpu) = (wall_start.elapsed(), process_cpu() - cpu_start);
+    println!("CPU {:.1} ms/s over {:.1} s", cpu.as_secs_f64() * 1000.0 / wall.as_secs_f64(), wall.as_secs_f64());
     println!("CPU time {:.2} ms per frame ({:.1} cores while replaying)", per_frame(cpu), cpu.as_secs_f64() / wall.as_secs_f64());
     println!("private memory: {} MB now, {} MB at most", private_mb().0, private_mb().1);
 }

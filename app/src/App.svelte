@@ -90,7 +90,9 @@
             waiting={waitingStage(snap)}
             crop={snap.settings.crop}
             frame={[snap.settings.vcamWidth, snap.settings.vcamHeight]}
-            picture={shownPicture(snap)} />
+            picture={shownPicture(snap)}
+            hidden={snap.settings.hidePreview}
+            onhidden={(hidePreview) => api.updateSettings({ hidePreview })} />
           <p class="apps">{t("preview.inApps")}</p>
         </div>
         <aside>

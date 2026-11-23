@@ -23,6 +23,8 @@ export interface Settings {
   launchAtLogin: boolean;
   closeToTray: boolean;
   autoStartCamera: boolean;
+  /** No live picture in the window (saves processor and graphics work); the camera keeps working. */
+  hidePreview: boolean;
   /** `null` = same as Windows. */
   language: string | null;
   checkUpdates: boolean;

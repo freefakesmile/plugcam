@@ -474,20 +474,25 @@ impl FrameConverter {
         let matrix = if frame.color.bt709 { YuvStandardMatrix::Bt709 } else { YuvStandardMatrix::Bt601 };
         yuvutils_rs::yuv_nv12_to_bgr(&yuv, &mut self.src_bgr, sw * 3, range, matrix, YuvConversionMode::Balanced)?;
 
-        let picture: &[u8] = if self.rotation == 0 {
-            &self.src_bgr
-        } else {
-            let (pixels, _) = self.src_bgr.as_chunks::<3>();
-            rotate(pixels, sw as usize, sw as usize, sh as usize, self.rotation, &mut self.rotated);
-            self.rotated.as_flattened()
+        // Upside down is the picture flipped both ways, which the copy into the frame does on
+        // the way; only a quarter turn needs a pass of its own.
+        let (picture, flip, mirror): (&[u8], bool, bool) = match self.rotation {
+            0 => (&self.src_bgr, false, self.mirror),
+            180 => (&self.src_bgr, true, !self.mirror),
+            _ => {
+                let (pixels, _) = self.src_bgr.as_chunks::<3>();
+                rotate(pixels, sw as usize, sw as usize, sh as usize, self.rotation, &mut self.rotated);
+                (self.rotated.as_flattened(), false, self.mirror)
+            }
         };
 
         let row_len = place.width as usize * 3;
         let out_row_len = self.out_width as usize * 3;
         for (row_idx, row) in picture.chunks_exact(row_len).enumerate() {
+            let row_idx = if flip { place.height as usize - 1 - row_idx } else { row_idx };
             let start = (place.y as usize + row_idx) * out_row_len + place.x as usize * 3;
             let dst = &mut self.out[start..start + row_len];
-            if self.mirror {
+            if mirror {
                 for (d, s) in dst.chunks_exact_mut(3).zip(row.chunks_exact(3).rev()) {
                     d.copy_from_slice(s);
                 }
