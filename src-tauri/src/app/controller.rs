@@ -177,6 +177,9 @@ struct State {
     /// The step counted after the last zoom messages, and when they were sent.
     zoom_sent: Option<(i32, Instant)>,
     zoom_range: Option<(f32, f32)>,
+    /// The camera has been on during this run. Streaming on demand turns it on by itself only
+    /// until then, so turning it off with the button still means off.
+    was_on: bool,
     problem: Option<String>,
     camera_missing: bool,
     notice: Option<Notice>,
@@ -250,6 +253,7 @@ impl Controller {
                 zoom: 1.0,
                 zoom_sent: None,
                 zoom_range: None,
+                was_on: false,
                 problem,
                 camera_missing: !registered && portable::is_portable(),
                 notice: None,
@@ -654,7 +658,12 @@ impl Controller {
         st.notice = None;
         self.publish(&mut st);
         let restart = needs_restart && st.camera_on;
+        // Turning streaming on demand on also turns the camera on: it then waits for an app.
+        let turn_on = !old.stream_on_demand && new.stream_on_demand && !st.camera_on;
         drop(st);
+        if turn_on {
+            self.set_camera_on(true);
+        }
         if restart {
             self.restart();
         }
@@ -798,9 +807,13 @@ impl Controller {
                 (st.fps, st.bitrate) = if streaming { (stats.fps, stats.bitrate) } else { (0.0, 0) };
             }
             let auto_start = !was_ready && now_ready.is_some() && st.settings.auto_start_camera && !st.camera_on;
+            // Streaming on demand, the camera is on from the start (it waits for an app, not for
+            // the phone), unless it was turned off by hand since.
+            st.was_on |= st.camera_on;
+            let on_demand = st.settings.stream_on_demand && !st.camera_on && !st.was_on;
             self.publish(&mut st);
             drop(st);
-            if auto_start {
+            if auto_start || on_demand {
                 self.set_camera_on(true);
             }
             std::thread::sleep(DEVICE_POLL);

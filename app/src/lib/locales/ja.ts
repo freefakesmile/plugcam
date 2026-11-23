@@ -106,7 +106,7 @@ const ja: Messages = {
   "set.closeToTray.hint": "ウィンドウを閉じてもカメラは動き続けます",
   "set.autoStart": "スマートフォンを接続したらカメラをオン",
   "set.onDemand": "アプリがカメラを使うときだけ配信する",
-  "set.onDemand.hint": "Zoom や Meet などのアプリが「Plugcam Camera」を開くとスマホのカメラがオンになり、閉じてから 10 秒後にオフになります。起動には数秒かかります。オフの場合、カメラがオンの間は常に配信します。",
+  "set.onDemand.hint": "Plugcam は「Plugcam Camera」を待機させておき、Zoom や Meet などのアプリが開くとスマホのカメラをオンに、閉じるとすぐにオフにします。起動には数秒かかります。オフの場合、カメラがオンの間は常に配信します。",
   "set.about": "このアプリについて",
   "set.version": "バージョン {v}",
   "set.rerunWizard": "初期設定をもう一度行う",

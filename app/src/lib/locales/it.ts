@@ -106,7 +106,7 @@ const it: Messages = {
   "set.closeToTray.hint": "La finestra si chiude, la fotocamera continua a funzionare",
   "set.autoStart": "Accendi la fotocamera quando il telefono viene collegato",
   "set.onDemand": "Trasmetti solo quando un’app usa la fotocamera",
-  "set.onDemand.hint": "Il telefono accende la fotocamera quando Zoom, Meet o un’altra app apre “Plugcam Camera” e la spegne 10 secondi dopo la chiusura. L’avvio richiede qualche secondo. Disattivato: trasmette sempre finché la fotocamera è accesa.",
+  "set.onDemand.hint": "Plugcam tiene pronta “Plugcam Camera”: il telefono accende la fotocamera quando Zoom, Meet o un’altra app la apre e la spegne appena viene chiusa. L’avvio richiede qualche secondo. Disattivato: trasmette sempre finché la fotocamera è accesa.",
   "set.about": "Informazioni",
   "set.version": "Versione {v}",
   "set.rerunWizard": "Ripeti la configurazione iniziale",

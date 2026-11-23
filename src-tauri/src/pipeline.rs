@@ -39,9 +39,10 @@ const STATS_PERIOD: Duration = Duration::from_secs(5);
 
 /// Streaming on demand: an app has to keep the camera open this long before the phone starts
 /// (apps also open it for a moment to read its formats), and the phone stops this long after the
-/// last app let go (switching apps, or leaving and joining a call, does not restart it).
+/// last app let go, like a webcam's light going out (an app that closes and at once reopens the
+/// camera does not restart the phone). The camera notices an app letting go within 0.5 s.
 const DEMAND_START_AFTER: Duration = Duration::from_secs(1);
-const DEMAND_STOP_AFTER: Duration = Duration::from_secs(10);
+const DEMAND_STOP_AFTER: Duration = Duration::from_secs(1);
 const DEMAND_POLL: Duration = Duration::from_millis(100);
 
 /// Seconds between key frames over Wi-Fi, so skipping ahead after a hiccup takes under a second.

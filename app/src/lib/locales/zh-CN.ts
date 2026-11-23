@@ -106,7 +106,7 @@ const zhCN: Messages = {
   "set.closeToTray.hint": "窗口关闭后摄像头继续工作",
   "set.autoStart": "连接手机时自动打开摄像头",
   "set.onDemand": "仅在应用使用摄像头时传输",
-  "set.onDemand.hint": "当 Zoom、Meet 或其他应用打开“Plugcam Camera”时，手机会打开摄像头，关闭后 10 秒再关闭。启动需要几秒钟。关闭此项时，只要摄像头开启就会一直传输。",
+  "set.onDemand.hint": "Plugcam 让“Plugcam Camera”保持就绪：Zoom、Meet 或其他应用打开它时手机打开摄像头，关闭后立即关闭。启动需要几秒钟。关闭此项时，只要摄像头开启就会一直传输。",
   "set.about": "关于",
   "set.version": "版本 {v}",
   "set.rerunWizard": "重新进行初始设置",

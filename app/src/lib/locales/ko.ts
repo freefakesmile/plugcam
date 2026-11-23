@@ -106,7 +106,7 @@ const ko: Messages = {
   "set.closeToTray.hint": "창이 닫혀도 카메라는 계속 작동합니다",
   "set.autoStart": "휴대폰을 연결하면 카메라 켜기",
   "set.onDemand": "앱이 카메라를 사용할 때만 전송",
-  "set.onDemand.hint": "Zoom, Meet 등의 앱이 “Plugcam Camera”를 열면 휴대폰 카메라가 켜지고, 닫은 뒤 10초 후에 꺼집니다. 시작에는 몇 초가 걸립니다. 끄면 카메라가 켜져 있는 동안 계속 전송합니다.",
+  "set.onDemand.hint": "Plugcam은 “Plugcam Camera”를 대기 상태로 두고, Zoom, Meet 등의 앱이 열면 휴대폰 카메라를 켜고 닫으면 바로 끕니다. 시작에는 몇 초가 걸립니다. 끄면 카메라가 켜져 있는 동안 계속 전송합니다.",
   "set.about": "정보",
   "set.version": "버전 {v}",
   "set.rerunWizard": "초기 설정 다시 하기",

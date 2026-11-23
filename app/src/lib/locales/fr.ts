@@ -106,7 +106,7 @@ const fr: Messages = {
   "set.closeToTray.hint": "La fenêtre se ferme, la caméra continue",
   "set.autoStart": "Allumer la caméra quand le téléphone est branché",
   "set.onDemand": "Diffuser seulement quand une app utilise la caméra",
-  "set.onDemand.hint": "Le téléphone allume sa caméra quand Zoom, Meet ou une autre app ouvre « Plugcam Camera », et l’éteint 10 secondes après sa fermeture. Le démarrage prend quelques secondes. Désactivé : la diffusion est continue tant que la caméra est allumée.",
+  "set.onDemand.hint": "Plugcam garde « Plugcam Camera » prête : le téléphone allume sa caméra quand Zoom, Meet ou une autre app l’ouvre, et l’éteint dès qu’elle la ferme. Le démarrage prend quelques secondes. Désactivé : la diffusion est continue tant que la caméra est allumée.",
   "set.about": "À propos",
   "set.version": "Version {v}",
   "set.rerunWizard": "Refaire la configuration initiale",

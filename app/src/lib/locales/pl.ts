@@ -106,7 +106,7 @@ const pl: Messages = {
   "set.closeToTray.hint": "Okno się zamyka, a kamera dalej działa",
   "set.autoStart": "Włączaj kamerę po podłączeniu telefonu",
   "set.onDemand": "Przesyłaj tylko, gdy aplikacja używa kamery",
-  "set.onDemand.hint": "Telefon włącza kamerę, gdy Zoom, Meet lub inna aplikacja otworzy „Plugcam Camera”, i wyłącza ją 10 sekund po zamknięciu. Uruchomienie trwa kilka sekund. Wyłączone: przesyłanie trwa cały czas, gdy kamera jest włączona.",
+  "set.onDemand.hint": "Plugcam trzyma „Plugcam Camera” w gotowości: telefon włącza kamerę, gdy Zoom, Meet lub inna aplikacja ją otworzy, i wyłącza zaraz po zamknięciu. Uruchomienie trwa kilka sekund. Wyłączone: przesyłanie trwa cały czas, gdy kamera jest włączona.",
   "set.about": "O programie",
   "set.version": "Wersja {v}",
   "set.rerunWizard": "Przejdź konfigurację początkową ponownie",

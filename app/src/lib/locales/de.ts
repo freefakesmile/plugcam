@@ -106,7 +106,7 @@ const de: Messages = {
   "set.closeToTray.hint": "Das Fenster schließt sich, die Kamera läuft weiter",
   "set.autoStart": "Kamera einschalten, wenn das Smartphone verbunden wird",
   "set.onDemand": "Nur übertragen, wenn eine App die Kamera nutzt",
-  "set.onDemand.hint": "Das Handy schaltet die Kamera ein, wenn Zoom, Meet oder eine andere App „Plugcam Camera“ öffnet, und 10 Sekunden nach dem Schließen wieder aus. Der Start dauert ein paar Sekunden. Aus: Bei eingeschalteter Kamera wird ständig übertragen.",
+  "set.onDemand.hint": "Plugcam hält „Plugcam Camera“ bereit: Das Handy schaltet die Kamera ein, wenn Zoom, Meet oder eine andere App sie öffnet, und gleich nach dem Schließen wieder aus. Der Start dauert ein paar Sekunden. Aus: Bei eingeschalteter Kamera wird ständig übertragen.",
   "set.about": "Info",
   "set.version": "Version {v}",
   "set.rerunWizard": "Ersteinrichtung erneut durchlaufen",

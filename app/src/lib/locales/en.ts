@@ -106,7 +106,7 @@ const en = {
   "set.closeToTray.hint": "The window closes, the camera keeps working",
   "set.autoStart": "Turn the camera on when the phone connects",
   "set.onDemand": "Stream only while an app uses the camera",
-  "set.onDemand.hint": "The phone turns its camera on when Zoom, Meet or another app opens “Plugcam Camera”, and off 10 seconds after it closes it. Starting takes a few seconds. Off: it streams all the time while the camera is on.",
+  "set.onDemand.hint": "Plugcam keeps “Plugcam Camera” ready; the phone turns its camera on when Zoom, Meet or another app opens it and off as soon as the app closes it. Starting takes a few seconds. Off: it streams all the time while the camera is on.",
   "set.about": "About",
   "set.version": "Version {v}",
   "set.rerunWizard": "Run the first-time setup again",

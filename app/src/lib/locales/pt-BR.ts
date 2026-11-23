@@ -106,7 +106,7 @@ const ptBR: Messages = {
   "set.closeToTray.hint": "A janela fecha e a câmera continua funcionando",
   "set.autoStart": "Ligar a câmera quando o celular for conectado",
   "set.onDemand": "Transmitir só quando um app usar a câmera",
-  "set.onDemand.hint": "O celular liga a câmera quando o Zoom, o Meet ou outro app abre a “Plugcam Camera” e desliga 10 segundos depois que ela é fechada. Iniciar leva alguns segundos. Desativado: transmite o tempo todo enquanto a câmera está ligada.",
+  "set.onDemand.hint": "O Plugcam deixa a “Plugcam Camera” pronta: o celular liga a câmera quando o Zoom, o Meet ou outro app a abre e desliga logo que ela é fechada. Iniciar leva alguns segundos. Desativado: transmite o tempo todo enquanto a câmera está ligada.",
   "set.about": "Sobre",
   "set.version": "Versão {v}",
   "set.rerunWizard": "Refazer a configuração inicial",

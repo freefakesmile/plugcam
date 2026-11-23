@@ -106,7 +106,7 @@ const tr: Messages = {
   "set.closeToTray.hint": "Pencere kapanır, kamera çalışmaya devam eder",
   "set.autoStart": "Telefon bağlanınca kamerayı aç",
   "set.onDemand": "Yalnızca bir uygulama kamerayı kullanırken yayınla",
-  "set.onDemand.hint": "Zoom, Meet veya başka bir uygulama “Plugcam Camera”yı açtığında telefon kamerasını açar, kapattıktan 10 saniye sonra kapatır. Başlatma birkaç saniye sürer. Kapalıyken kamera açık olduğu sürece sürekli yayınlar.",
+  "set.onDemand.hint": "Plugcam “Plugcam Camera”yı hazır tutar: Zoom, Meet veya başka bir uygulama onu açtığında telefon kamerasını açar, kapatılır kapatılmaz kapatır. Başlatma birkaç saniye sürer. Kapalıyken kamera açık olduğu sürece sürekli yayınlar.",
   "set.about": "Hakkında",
   "set.version": "Sürüm {v}",
   "set.rerunWizard": "İlk kurulumu yeniden yap",
