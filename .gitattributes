@@ -1,0 +1,2 @@
+# Run by sh on Linux (CI, WSL): keep LF on Windows checkouts too.
+*.sh text eol=lf

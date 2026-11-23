@@ -21,6 +21,7 @@ use windows::Win32::Media::MediaFoundation::*;
 use windows::Win32::System::Com::{CLSCTX_INPROC_SERVER, COINIT_MULTITHREADED, CoCreateInstance, CoInitializeEx, CoUninitialize};
 use windows::core::Interface;
 
+use crate::ffdecode::FfDecoder;
 use crate::frame::{ColorInfo, Nv12Frame, Prescale};
 
 /// When a GPU decoder last failed. Decoders opened within `GPU_RETRY` of that stay on the CPU,
@@ -42,6 +43,8 @@ pub enum DecodeError {
     Windows(#[from] windows::core::Error),
     #[error("decoder produced no NV12 output type")]
     NoNv12,
+    #[error("{0}")]
+    Ffmpeg(String),
     #[error("decoded buffer is {got} bytes, expected at least {want}")]
     ShortBuffer { got: u32, want: usize },
 }
@@ -61,7 +64,74 @@ struct OutputFormat {
     provides_samples: bool,
 }
 
-pub struct H264Decoder {
+/// When FFmpeg's decoder last failed; like `GPU_FAILED_AT`, decoders opened within `GPU_RETRY`
+/// of that use the Windows decoder.
+static FFMPEG_FAILED_AT: Mutex<Option<Instant>> = Mutex::new(None);
+
+/// The decoder for one session: FFmpeg's on Direct3D 12 when `plugcam_dec.dll` is there and
+/// works (much less processor time, see `ffdecode`), else the one built into Windows.
+/// `PLUGCAM_DECODER=windows` always uses the latter.
+pub enum H264Decoder {
+    Ffmpeg(FfDecoder),
+    Windows(MfDecoder),
+}
+
+impl H264Decoder {
+    pub fn new(width: u32, height: u32) -> Result<Self, DecodeError> {
+        let windows_only = std::env::var("PLUGCAM_DECODER").is_ok_and(|v| v.eq_ignore_ascii_case("windows"))
+            || std::env::var_os("PLUGCAM_SOFTWARE_DECODE").is_some()
+            || FFMPEG_FAILED_AT.lock().unwrap().is_some_and(|t| t.elapsed() < GPU_RETRY);
+        if !windows_only && let Some(dll) = crate::resources::find("plugcam_dec.dll", "PLUGCAM_DEC_DLL") {
+            match FfDecoder::open(&dll) {
+                Ok(d) => return Ok(Self::Ffmpeg(d)),
+                Err(e) => {
+                    log::warn!("FFmpeg decoder: {e}; using the Windows decoder");
+                    *FFMPEG_FAILED_AT.lock().unwrap() = Some(Instant::now());
+                }
+            }
+        }
+        MfDecoder::new(width, height).map(Self::Windows)
+    }
+
+    /// True when pictures are decoded on the GPU.
+    pub fn is_hardware(&self) -> bool {
+        match self {
+            Self::Ffmpeg(_) => true,
+            Self::Windows(d) => d.is_hardware(),
+        }
+    }
+
+    /// Size of the pictures coming out, once known.
+    pub fn picture_size(&self) -> Option<(u32, u32)> {
+        match self {
+            Self::Ffmpeg(d) => d.picture_size(),
+            Self::Windows(d) => d.picture_size(),
+        }
+    }
+
+    /// Crop and scale the next pictures on the GPU before they are read back; such pictures come
+    /// out with `prescaled` set. Ignored when the decoder cannot (the frame converter does it).
+    pub fn set_prescale(&mut self, prescale: Option<Prescale>) {
+        match self {
+            Self::Ffmpeg(d) => d.set_prescale(prescale),
+            Self::Windows(d) => d.set_prescale(prescale),
+        }
+    }
+
+    pub fn decode(&mut self, data: &[u8], pts_us: u64, on_frame: &mut dyn FnMut(&Nv12Frame)) -> Result<(), DecodeError> {
+        match self {
+            Self::Ffmpeg(d) => d.decode(data, pts_us, on_frame).map_err(|e| {
+                log::warn!("{e}; the next sessions use the Windows decoder for a while");
+                *FFMPEG_FAILED_AT.lock().unwrap() = Some(Instant::now());
+                DecodeError::Ffmpeg(e)
+            }),
+            Self::Windows(d) => d.decode(data, pts_us, on_frame),
+        }
+    }
+}
+
+/// The H.264 decoder built into Windows (Media Foundation).
+pub struct MfDecoder {
     // Field order matters: COM objects must be released before `_runtime` shuts MF down.
     mft: IMFTransform,
     gpu: Option<Gpu>,
@@ -71,7 +141,7 @@ pub struct H264Decoder {
     _runtime: MfRuntime,
 }
 
-impl H264Decoder {
+impl MfDecoder {
     /// `width`/`height` come from the scrcpy session packet; the decoder confirms or corrects them.
     /// Uses the GPU unless it failed recently or `PLUGCAM_SOFTWARE_DECODE` is set.
     pub fn new(width: u32, height: u32) -> Result<Self, DecodeError> {

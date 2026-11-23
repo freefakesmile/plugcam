@@ -2,6 +2,7 @@ pub mod adb;
 pub mod app;
 pub mod decode;
 pub mod diag;
+pub mod ffdecode;
 pub mod frame;
 pub mod pipeline;
 pub mod platform;
