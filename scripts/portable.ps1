@@ -18,6 +18,8 @@ $res = "$tauri\resources"
 foreach ($f in 'adb.exe', 'AdbWinApi.dll', 'AdbWinUsbApi.dll', 'plugcam_cam.dll', 'scrcpy-server', 'scrcpy-server.sha256') {
     Copy-Item "$res\$f" "$stage\resources\"
 }
+# FFmpeg's decoder (see docs/decoder.md); without it Plugcam uses the Windows decoder.
+if (Test-Path "$res\plugcam_dec.dll") { Copy-Item "$res\plugcam_dec.dll" "$stage\resources\" }
 Copy-Item "$res\x86\plugcam_cam.dll" "$stage\resources\x86\"
 Copy-Item "$res\licenses\*" "$stage\licenses\"
 Copy-Item "$root\LICENSE" "$stage\LICENSE.txt"

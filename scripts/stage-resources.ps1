@@ -1,13 +1,19 @@
 # Copies the binaries the installer ships into src-tauri\resources (they are not in git):
 #   adb.exe, AdbWinApi.dll, AdbWinUsbApi.dll   from Android platform-tools
 #   plugcam_cam.dll (x64) and x86\plugcam_cam.dll   from vcam\dist (run vcam-build.ps1 first)
+#   plugcam_dec.dll and FFmpeg's license files       from decoder\out (decoder/build.sh, on Linux
+#                                                    or in CI; see docs/decoder.md). Without it
+#                                                    Plugcam decodes with the Windows decoder.
 #
 #   .\scripts\stage-resources.ps1                    # platform-tools of the adb on PATH
 #   .\scripts\stage-resources.ps1 -PlatformTools D:\sdk\platform-tools
 #   .\scripts\stage-resources.ps1 -Download          # latest platform-tools from Google (CI)
+#   ... -RequireDecoder                              # fail without plugcam_dec.dll (releases)
 param(
     [string]$PlatformTools,
-    [switch]$Download
+    [switch]$Download,
+    [string]$Decoder,
+    [switch]$RequireDecoder
 )
 $ErrorActionPreference = 'Stop'
 $root = Join-Path $PSScriptRoot '..' | Resolve-Path
@@ -39,6 +45,19 @@ if (-not (Test-Path "$dist\x64\plugcam_cam.dll")) { throw "build the camera firs
 Copy-Item "$dist\x64\plugcam_cam.dll" $res -Force
 Copy-Item "$dist\Win32\plugcam_cam.dll" "$res\x86" -Force
 Copy-Item "$root\vcam\LICENSE" "$licenses\softcam-LICENSE.txt" -Force
+
+if (-not $Decoder) { $Decoder = "$root\decoder\out" }
+if (Test-Path "$Decoder\plugcam_dec.dll") {
+    Copy-Item "$Decoder\plugcam_dec.dll" $res -Force
+    foreach ($f in 'FFmpeg-LICENSE.txt', 'FFmpeg-SOURCE.txt', 'DirectX-Headers-LICENSE.txt') {
+        Copy-Item "$Decoder\$f" $licenses -Force
+    }
+} elseif ($RequireDecoder) {
+    throw "plugcam_dec.dll is not in $($Decoder): build it with decoder/build.sh (docs/decoder.md)"
+} else {
+    Remove-Item "$res\plugcam_dec.dll", "$licenses\FFmpeg-*.txt", "$licenses\DirectX-Headers-LICENSE.txt" -ErrorAction SilentlyContinue
+    Write-Warning "no plugcam_dec.dll in $($Decoder): this build decodes with the Windows decoder"
+}
 
 $version = (Get-Content "$PlatformTools\source.properties" | Select-String 'Pkg.Revision').ToString()
 Write-Host "staged into $res ($version)"

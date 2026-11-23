@@ -96,9 +96,10 @@ project's README in September 2026.
 
 Plugcam is a native Rust app with a small C++ virtual camera. The window is drawn by the WebView2
 that comes with Windows (through [Tauri](https://tauri.app)), so there is no bundled Chromium as
-in Electron apps. The video itself never goes through the web page: decoding (Windows' own H.264
-decoder, on the graphics chip), rotating, scaling, color adjustments and handing frames to the
-camera all happen in Rust, and the window only gets a small preview while it is open. The
+in Electron apps. The video itself never goes through the web page: decoding (FFmpeg's H.264
+decoder on the graphics chip, through Direct3D 12), cropping, rotating, scaling, color
+adjustments and handing frames to the camera all happen natively, and the window only gets a small
+preview while it is open, which you can also hide. The
 WebView draws without the graphics chip, which saves about 80 MB for a window this simple. Closed
 to the tray, Plugcam shuts the WebView down completely, so a camera streaming in the background
 takes under 1% of the CPU.
@@ -121,6 +122,22 @@ its video memory is ordinary RAM, so the decoder's frame buffers count in the me
 
 adb, which Plugcam talks to the phone through, adds about 2 MB; it is shared with any other
 Android tool you run.
+
+#### FFmpeg instead of Windows' decoder
+
+The table above was measured with the decoder built into Windows. On NVIDIA graphics that decoder
+keeps two of its threads busy while the graphics chip decodes each frame, so Plugcam now decodes
+with a 1 MB build of FFmpeg 9.1 (just the H.264 decoder and Direct3D 12 video decoding) and
+keeps Windows' decoder as the fallback. A crop is done on the graphics chip too. Same phone
+stream, same picture, on an i7-13700K with an RTX 3080 Ti:
+
+| CPU, 1080p30 | Windows' decoder | FFmpeg, Direct3D 12 |
+|---|---|---|
+| Streaming, preview hidden | 458 ms/s (2.9%) | **118 ms/s (0.7%)** |
+| Decoding a recording | ~376 ms/s | **~78 ms/s** |
+| Decoding a recording, cropped | ~358–430 ms/s | **~80 ms/s** |
+
+How it works, how to build the DLL and how to measure it: [docs/decoder.md](docs/decoder.md).
 
 ## Get started
 
@@ -235,12 +252,13 @@ In Plugcam, **Settings → Diagnostics → Save report** makes a file to attach 
 
 ```
 phone camera ─▶ scrcpy-server ─▶ adb, USB/Wi-Fi ─▶ Plugcam ─▶ "Plugcam Camera" ─▶ Zoom, OBS, …
-                (H.264 in the      (TCP tunnel)      (Media Foundation     (DirectShow
-                 phone's encoder)                      decoder → frames)     filter, Softcam)
+                (H.264 in the      (TCP tunnel)      (FFmpeg on            (DirectShow
+                 phone's encoder)                      Direct3D 12 → frames) filter, Softcam)
 ```
 
 Plugcam pushes `scrcpy-server` 4.1 (pinned by checksum) to the phone, starts it through adb and
-reads its video stream. Windows' built-in H.264 decoder turns the stream into pictures, which are
+reads its video stream. FFmpeg's H.264 decoder turns the stream into pictures on the graphics
+chip (Windows' built-in decoder takes over where that is not available); they are cropped,
 rotated, scaled and mirrored as needed and handed to the virtual camera. When you stop, the server
 exits and removes itself from the phone.
 
@@ -259,8 +277,11 @@ pnpm install
 pnpm tauri dev                    # runs the app
 ```
 
-To build the installer: `.\scripts\stage-resources.ps1` (copies adb and the camera DLL into
-`src-tauri\resources`), then `pnpm tauri build`; `.\scripts\portable.ps1` packs the portable zip
+The FFmpeg decoder, `plugcam_dec.dll`, is cross-built on Linux with `decoder/build.sh` (CI does it
+too; see [docs/decoder.md](docs/decoder.md)); without it the app uses Windows' decoder.
+
+To build the installer: `.\scripts\stage-resources.ps1` (copies adb, the camera DLL and the
+decoder DLL into `src-tauri\resources`), then `pnpm tauri build`; `.\scripts\portable.ps1` packs the portable zip
 from that build. Tests: `cargo test` in `src-tauri`. Releases are built by
 [.github/workflows/release.yml](.github/workflows/release.yml) when a `v*` tag is pushed.
 

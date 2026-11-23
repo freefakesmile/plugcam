@@ -22,9 +22,17 @@ bundled programs in its `licenses` folder.
 | scrcpy-server (runs on the phone, pushed over adb) | 4.1 | Apache-2.0, © Genymobile, © Romain Vimont | https://github.com/Genymobile/scrcpy |
 | adb, AdbWinApi.dll, AdbWinUsbApi.dll (Android SDK Platform-Tools) | latest at build time | Apache-2.0 and others, see `platform-tools-NOTICE.txt` | https://developer.android.com/tools/releases/platform-tools |
 | Softcam (the virtual camera, forked as plugcam_cam.dll) | fork of 1.x | MIT, © 2020 tshino | https://github.com/tshino/softcam |
+| FFmpeg (libavcodec, libavutil: the H.264 decoder in plugcam_dec.dll) | 9.1 | LGPL-2.1-or-later, see `FFmpeg-LICENSE.txt` and `FFmpeg-SOURCE.txt` | https://ffmpeg.org |
+| DirectX-Headers (to build plugcam_dec.dll) | 1.620.2 | MIT, © Microsoft | https://github.com/microsoft/DirectX-Headers |
 
 scrcpy-server is used unmodified. The Softcam fork changes the camera name, class ID and shared
 memory names (see [vcam/PLUGCAM.md](vcam/PLUGCAM.md)).
+
+plugcam_dec.dll is FFmpeg configured down to the H.264 decoder and its Direct3D 12 hwaccel,
+linked with a small wrapper ([decoder/plugcam_dec.c](decoder/plugcam_dec.c), LGPL-2.1-or-later)
+by [decoder/build.sh](decoder/build.sh); FFmpeg itself is unmodified. The DLL is loaded at
+runtime, so it can be replaced with one built from a modified FFmpeg (see
+[docs/decoder.md](docs/decoder.md)).
 """
 
 

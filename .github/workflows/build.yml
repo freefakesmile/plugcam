@@ -7,7 +7,35 @@ on:
   workflow_dispatch:
 
 jobs:
+  # plugcam_dec.dll: FFmpeg's H.264 decoder on Direct3D 12, cross-built with mingw-w64 (see
+  # docs/decoder.md). In the same Ubuntu as the machine it was developed on, for the same headers.
+  decoder:
+    runs-on: ubuntu-latest
+    container: ubuntu:26.04
+    steps:
+      - name: Toolchain
+        run: |
+          apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq gcc gcc-mingw-w64-x86-64 make pkg-config xz-utils curl ca-certificates git
+
+      - uses: actions/checkout@v7
+
+      # FFmpeg takes minutes to build and only changes with build.sh.
+      - uses: actions/cache@v6
+        with:
+          path: decoder/build/prefix
+          key: ffmpeg-ubuntu-26.04-${{ hashFiles('decoder/build.sh') }}
+
+      - name: Build plugcam_dec.dll
+        run: sh decoder/build.sh
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: plugcam-decoder
+          path: decoder/out/
+
   windows:
+    needs: decoder
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
@@ -25,9 +53,14 @@ jobs:
       - name: Build plugcam_cam.dll (x64, Win32)
         run: ./scripts/vcam-build.ps1
 
+      - uses: actions/download-artifact@v8
+        with:
+          name: plugcam-decoder
+          path: decoder/out
+
       # tauri-build checks that the bundled resources exist, so tests need them too.
-      - name: Stage adb and the camera DLLs
-        run: ./scripts/stage-resources.ps1 -Download
+      - name: Stage adb, the camera DLLs and the decoder
+        run: ./scripts/stage-resources.ps1 -Download -RequireDecoder
 
       - name: Rust tests
         working-directory: src-tauri
