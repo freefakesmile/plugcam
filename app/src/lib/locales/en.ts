@@ -132,6 +132,8 @@ const en = {
   "upd.later": "Later",
   "upd.retry": "Try again",
   "upd.checkNow": "Check now",
+  "upd.manual": "This build does not update itself: new versions are on the Releases page",
+  "upd.releases": "Releases",
   "upd.checking": "Checking for updates…",
   "upd.upToDate": "You have the latest version",
   "upd.checkFailed": "Could not check for updates",

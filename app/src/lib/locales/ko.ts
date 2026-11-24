@@ -132,6 +132,8 @@ const ko: Messages = {
   "upd.later": "나중에",
   "upd.retry": "다시 시도",
   "upd.checkNow": "지금 확인",
+  "upd.manual": "이 빌드는 자동으로 업데이트되지 않습니다. 새 버전은 릴리스 페이지에 있습니다",
+  "upd.releases": "릴리스",
   "upd.checking": "업데이트 확인 중…",
   "upd.upToDate": "최신 버전입니다",
   "upd.checkFailed": "업데이트를 확인할 수 없습니다",

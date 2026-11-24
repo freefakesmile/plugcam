@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Qwinty/plugcam/releases/latest"><img src="https://img.shields.io/github/v/release/Qwinty/plugcam?include_prereleases&label=download&color=0a64c2" alt="Download"></a>
+  <a href="https://github.com/freefakesmile/plugcam/releases/latest"><img src="https://img.shields.io/github/v/release/freefakesmile/plugcam?include_prereleases&label=download&color=0a64c2" alt="Download"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0a64c2" alt="Windows 10 and 11">
   <img src="https://img.shields.io/badge/Android-12%2B-3ddc84" alt="Android 12+">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/Qwinty/plugcam?color=555" alt="License"></a>
@@ -31,8 +31,9 @@
 > [!NOTE]
 > **About this fork.** It decodes the phone's video with [FFmpeg](https://ffmpeg.org) on the
 > graphics chip through Direct3D 12 instead of the H.264 decoder built into Windows, and adds a
-> few things on top. Upstream: [Qwinty/plugcam](https://github.com/Qwinty/plugcam). This fork has
-> no releases of its own yet: [build it from source](#build-from-source).
+> few things on top. Upstream: [Qwinty/plugcam](https://github.com/Qwinty/plugcam).
+> [Download](https://github.com/freefakesmile/plugcam/releases/latest) the installer or the portable
+> zip; this fork's builds do not update themselves, new versions are published on the Releases page.
 
 ## What this fork changes
 

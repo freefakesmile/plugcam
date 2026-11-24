@@ -132,6 +132,8 @@ const de: Messages = {
   "upd.later": "Später",
   "upd.retry": "Erneut versuchen",
   "upd.checkNow": "Jetzt prüfen",
+  "upd.manual": "Dieser Build aktualisiert sich nicht selbst: Neue Versionen gibt es auf der Releases-Seite",
+  "upd.releases": "Releases",
   "upd.checking": "Suche nach Updates…",
   "upd.upToDate": "Du hast die neueste Version",
   "upd.checkFailed": "Suche nach Updates fehlgeschlagen",

@@ -16,6 +16,13 @@ use tauri_plugin_updater::{Update, UpdaterExt};
 use super::Controller;
 use crate::portable;
 
+/// This fork publishes its releases without an update manifest or signatures. Checking would
+/// find upstream's (Qwinty/plugcam) releases, which decode with Windows' decoder, and offer them
+/// as updates; so there are no checks, and Settings links to the fork's releases instead.
+pub const ENABLED: bool = false;
+/// Where this fork's new versions are.
+pub const RELEASES_URL: &str = "https://github.com/freefakesmile/plugcam/releases";
+
 const FIRST_CHECK_DELAY: Duration = Duration::from_secs(10);
 const CHECK_EVERY: Duration = Duration::from_secs(24 * 60 * 60);
 /// Manifest entries: the installer for installed copies, the zip for portable ones.
@@ -48,6 +55,9 @@ pub struct UpdateView {
     pub progress: Option<f32>,
     pub error: Option<String>,
     pub portable: bool,
+    /// False in this fork (see `ENABLED`): no checks, a link to `releases_url` instead.
+    pub enabled: bool,
+    pub releases_url: String,
 }
 
 #[derive(Default)]
@@ -78,6 +88,8 @@ impl Updates {
         let mut view = self.view.lock().unwrap();
         f(&mut view);
         view.portable = portable::is_portable();
+        view.enabled = ENABLED;
+        view.releases_url = RELEASES_URL.into();
         let _ = app.emit("update", view.clone());
     }
 }
@@ -144,6 +156,9 @@ async fn check(app: &AppHandle, manual: bool) {
 
 /// Checks at start and then daily while the setting is on.
 pub fn start(app: AppHandle) {
+    if !ENABLED {
+        return;
+    }
     std::thread::Builder::new()
         .name("updates".into())
         .spawn(move || {
@@ -162,18 +177,25 @@ pub fn start(app: AppHandle) {
 pub fn update_state(updates: State<Updates>) -> UpdateView {
     let mut view = updates.view.lock().unwrap().clone();
     view.portable = portable::is_portable();
+    view.enabled = ENABLED;
+    view.releases_url = RELEASES_URL.into();
     view
 }
 
 #[tauri::command]
 pub async fn check_for_updates(app: AppHandle) {
-    check(&app, true).await
+    if ENABLED {
+        check(&app, true).await
+    }
 }
 
 /// Downloads the update, checks its signature and installs it. Returns only on failure: on
 /// success this process exits and the new version starts.
 #[tauri::command]
 pub async fn install_update(app: AppHandle) -> Result<(), String> {
+    if !ENABLED {
+        return Err("updates are off in this build".into());
+    }
     let updates = app.state::<Updates>();
     let _busy = Busy::take(&updates.busy).ok_or("busy")?;
     let Some(update) = updates.pending.lock().unwrap().clone() else { return Err("no update".into()) };

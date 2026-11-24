@@ -132,6 +132,8 @@ const pl: Messages = {
   "upd.later": "Później",
   "upd.retry": "Spróbuj ponownie",
   "upd.checkNow": "Sprawdź teraz",
+  "upd.manual": "Ta wersja nie aktualizuje się sama: nowe wersje są na stronie wydań",
+  "upd.releases": "Wydania",
   "upd.checking": "Sprawdzanie aktualizacji…",
   "upd.upToDate": "Masz najnowszą wersję",
   "upd.checkFailed": "Nie udało się sprawdzić aktualizacji",

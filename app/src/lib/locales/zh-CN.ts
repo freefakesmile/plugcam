@@ -132,6 +132,8 @@ const zhCN: Messages = {
   "upd.later": "稍后",
   "upd.retry": "重试",
   "upd.checkNow": "立即检查",
+  "upd.manual": "此版本不会自动更新：新版本在发布页面",
+  "upd.releases": "发布页面",
   "upd.checking": "正在检查更新…",
   "upd.upToDate": "已是最新版本",
   "upd.checkFailed": "无法检查更新",

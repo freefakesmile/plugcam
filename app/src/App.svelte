@@ -14,7 +14,7 @@
 
   let snap = $state<Snapshot | null>(null);
   let screen = $state<"main" | "settings" | "phones" | "wizard">("main");
-  let update = $state<UpdateView>({ phase: "idle", version: null, notes: null, progress: null, error: null, portable: false });
+  let update = $state<UpdateView>({ phase: "idle", version: null, notes: null, progress: null, error: null, portable: false, enabled: false, releasesUrl: "" });
   let dialog = $state<{ mode: "update" } | { mode: "whatsNew"; releases: Release[] } | null>(null);
 
   function apply(s: Snapshot) {

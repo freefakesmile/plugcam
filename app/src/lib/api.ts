@@ -185,6 +185,9 @@ export interface UpdateView {
   progress: number | null;
   error: string | null;
   portable: boolean;
+  /** False in builds that do not update themselves: Settings links to `releasesUrl` instead. */
+  enabled: boolean;
+  releasesUrl: string;
 }
 
 export const updateState = () => invoke<UpdateView>("update_state");

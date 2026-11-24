@@ -24,8 +24,9 @@
 > [!NOTE]
 > **Об этом форке.** Видео с телефона здесь декодирует [FFmpeg](https://ffmpeg.org) на
 > графическом чипе через Direct3D 12, а не встроенный в Windows декодер H.264; плюс несколько
-> доработок поверх. Оригинал: [Qwinty/plugcam](https://github.com/Qwinty/plugcam). Своих релизов
-> у форка пока нет: [соберите из исходников](../../README.md#build-from-source).
+> доработок поверх. Оригинал: [Qwinty/plugcam](https://github.com/Qwinty/plugcam).
+> [Скачайте](https://github.com/freefakesmile/plugcam/releases/latest) установщик или портативный
+> zip; сборки форка не обновляются сами, новые версии выходят на странице релизов.
 
 ## Что изменено в этом форке
 

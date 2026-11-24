@@ -132,6 +132,8 @@ const ja: Messages = {
   "upd.later": "後で",
   "upd.retry": "再試行",
   "upd.checkNow": "今すぐ確認",
+  "upd.manual": "このビルドは自動更新されません。新しいバージョンはリリースページにあります",
+  "upd.releases": "リリース",
   "upd.checking": "アップデートを確認しています…",
   "upd.upToDate": "最新バージョンです",
   "upd.checkFailed": "アップデートを確認できませんでした",

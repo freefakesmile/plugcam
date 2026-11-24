@@ -158,17 +158,22 @@
   <section class="section">
     <h2>{t("set.updates")}</h2>
     <div class="card">
-      <Toggle
-        label={t("set.checkUpdates")}
-        hint={t("set.checkUpdates.hint")}
-        checked={s.checkUpdates}
-        onchange={(v) => api.updateSettings({ checkUpdates: v })} />
+      {#if update.enabled}
+        <Toggle
+          label={t("set.checkUpdates")}
+          hint={t("set.checkUpdates.hint")}
+          checked={s.checkUpdates}
+          onchange={(v) => api.updateSettings({ checkUpdates: v })} />
+      {/if}
       <div class="row">
         <span class="row-text">
           <span>{t("set.version", { v: __APP_VERSION__ })}{snap.portable ? ` · ${t("set.portable")}` : ""}</span>
-          <span class="row-hint" class:accent={update.version && update.phase !== "error"} title={update.error ?? undefined}>{updateLine}</span>
+          <span class="row-hint" class:accent={update.version && update.phase !== "error"} title={update.error ?? undefined}
+            >{update.enabled ? updateLine : t("upd.manual")}</span>
         </span>
-        {#if update.version && update.phase !== "checking"}
+        {#if !update.enabled}
+          <button class="btn small" onclick={() => api.openUrl(update.releasesUrl)}>{t("upd.releases")}</button>
+        {:else if update.version && update.phase !== "checking"}
           <button class="btn accent small" onclick={onupdate}>{t("upd.install")}</button>
         {:else}
           <button class="btn small" disabled={checking} onclick={() => api.checkForUpdates()}>

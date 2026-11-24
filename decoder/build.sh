@@ -2,7 +2,7 @@
 # Builds plugcam_dec.dll on Linux with mingw-w64: FFmpeg cut down to the H.264 decoder and its
 # Direct3D 12 hwaccel, linked statically into plugcam_dec.c. See docs/decoder.md.
 #
-#   sudo apt install gcc gcc-mingw-w64-x86-64 make pkg-config xz-utils curl
+#   sudo apt install build-essential gcc-mingw-w64-x86-64 pkg-config xz-utils curl
 #   ./build.sh            -> out/plugcam_dec.dll  (FFMPEG_REBUILD=1 to rebuild FFmpeg too)
 set -eu
 

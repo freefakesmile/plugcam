@@ -132,6 +132,8 @@ const ptBR: Messages = {
   "upd.later": "Mais tarde",
   "upd.retry": "Tentar de novo",
   "upd.checkNow": "Verificar agora",
+  "upd.manual": "Esta versão não se atualiza sozinha: as novas estão na página de versões",
+  "upd.releases": "Versões",
   "upd.checking": "Procurando atualizações…",
   "upd.upToDate": "Você tem a versão mais recente",
   "upd.checkFailed": "Não foi possível procurar atualizações",

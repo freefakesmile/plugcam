@@ -132,6 +132,8 @@ const tr: Messages = {
   "upd.later": "Sonra",
   "upd.retry": "Tekrar dene",
   "upd.checkNow": "Şimdi denetle",
+  "upd.manual": "Bu sürüm kendini güncellemez: yeni sürümler Sürümler sayfasında",
+  "upd.releases": "Sürümler",
   "upd.checking": "Güncellemeler denetleniyor…",
   "upd.upToDate": "En son sürümü kullanıyorsunuz",
   "upd.checkFailed": "Güncellemeler denetlenemedi",

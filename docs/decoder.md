@@ -94,7 +94,7 @@ an artifact.
 By hand, on Ubuntu 26.04 (or in WSL):
 
 ```sh
-sudo apt install gcc gcc-mingw-w64-x86-64 make pkg-config xz-utils curl
+sudo apt install build-essential gcc-mingw-w64-x86-64 pkg-config xz-utils curl
 sh decoder/build.sh        # -> decoder/out/plugcam_dec.dll and its license files
 ```
 

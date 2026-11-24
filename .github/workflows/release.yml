@@ -1,12 +1,11 @@
 name: release
 
-# Push a tag like v0.2.0 (same as the version in tauri.conf.json and package.json): builds the
-# installer and the portable zip, signs both for the updater, writes latest.json and attaches all
-# of it to a draft release with the notes from docs/releases/<tag>.md. Publishing the draft is
-# what makes installed copies see the update (they read releases/latest/download/latest.json).
+# Push a tag like v0.3.0 (same as the version in tauri.conf.json and package.json): builds
+# plugcam_dec.dll, the installer and the portable zip and publishes them as a release with the
+# notes from docs/releases/<tag>.md.
 #
-# Needs the repository secrets TAURI_SIGNING_PRIVATE_KEY and TAURI_SIGNING_PRIVATE_KEY_PASSWORD
-# (the key whose public half is plugins.updater.pubkey in tauri.conf.json).
+# This fork's builds do not update themselves (see ENABLED in src-tauri/src/app/updates.rs), so
+# nothing is signed for the updater and no latest.json is made: no secrets are needed.
 on:
   push:
     tags: ["v*"]
@@ -24,7 +23,7 @@ jobs:
       - name: Toolchain
         run: |
           apt-get update -qq
-          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq gcc gcc-mingw-w64-x86-64 make pkg-config xz-utils curl ca-certificates git
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq build-essential gcc-mingw-w64-x86-64 pkg-config xz-utils curl ca-certificates git
 
       - uses: actions/checkout@v7
 
@@ -75,9 +74,6 @@ jobs:
         run: cargo test --release
 
       - name: Installer and portable zip
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           $tag = "${{ github.ref_name }}"
           $version = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
@@ -85,9 +81,8 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm tauri build
           ./scripts/portable.ps1
-          ./scripts/update-manifest.ps1 -Tag $tag
 
-      - name: Draft release
+      - name: Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -102,13 +97,12 @@ jobs:
             "$hash  $(Split-Path $f -Leaf)" | Out-File -Encoding ascii "$f.sha256"
             $files += "$f.sha256"
           }
-          $files += (Resolve-Path "$bundle/latest.json").Path
           $notes = "docs/releases/$tag.md"
           if (gh release view $tag 2>$null) {
-            # Made by hand (publishing a draft creates the tag): keep the files it was tested with.
+            # Made by hand: keep the files it was tested with.
             Write-Output "Release $tag already exists; leaving its files alone."
           } elseif (Test-Path $notes) {
-            gh release create $tag @files --draft --title "Plugcam $tag" --notes-file $notes
+            gh release create $tag @files --title "Plugcam $tag" --notes-file $notes
           } else {
-            gh release create $tag @files --draft --title "Plugcam $tag" --generate-notes
+            gh release create $tag @files --title "Plugcam $tag" --generate-notes
           }

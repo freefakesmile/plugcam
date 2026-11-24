@@ -132,6 +132,8 @@ const es: Messages = {
   "upd.later": "Más tarde",
   "upd.retry": "Reintentar",
   "upd.checkNow": "Buscar ahora",
+  "upd.manual": "Esta versión no se actualiza sola: las nuevas están en la página de versiones",
+  "upd.releases": "Versiones",
   "upd.checking": "Buscando actualizaciones…",
   "upd.upToDate": "Tienes la versión más reciente",
   "upd.checkFailed": "No se pudieron buscar actualizaciones",

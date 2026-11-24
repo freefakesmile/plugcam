@@ -16,7 +16,7 @@ jobs:
       - name: Toolchain
         run: |
           apt-get update -qq
-          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq gcc gcc-mingw-w64-x86-64 make pkg-config xz-utils curl ca-certificates git
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq build-essential gcc-mingw-w64-x86-64 pkg-config xz-utils curl ca-certificates git
 
       - uses: actions/checkout@v7
 

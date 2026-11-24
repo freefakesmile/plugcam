@@ -132,6 +132,8 @@ const it: Messages = {
   "upd.later": "Più tardi",
   "upd.retry": "Riprova",
   "upd.checkNow": "Controlla ora",
+  "upd.manual": "Questa build non si aggiorna da sola: le nuove versioni sono nella pagina delle release",
+  "upd.releases": "Release",
   "upd.checking": "Ricerca aggiornamenti…",
   "upd.upToDate": "Hai l’ultima versione",
   "upd.checkFailed": "Impossibile controllare gli aggiornamenti",
