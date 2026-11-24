@@ -28,6 +28,45 @@
   <a href="docs/readme/README.ja.md">日本語</a>
 </p>
 
+> [!NOTE]
+> **About this fork.** It decodes the phone's video with [FFmpeg](https://ffmpeg.org) on the
+> graphics chip through Direct3D 12 instead of the H.264 decoder built into Windows, and adds a
+> few things on top. Upstream: [Qwinty/plugcam](https://github.com/Qwinty/plugcam). This fork has
+> no releases of its own yet: [build it from source](#build-from-source).
+
+## What this fork changes
+
+- **FFmpeg instead of Windows' decoder.** `plugcam_dec.dll` (1 MB: FFmpeg 9.1 with only the H.264
+  decoder and Direct3D 12 video decoding) turns the stream into pictures; Windows' decoder takes
+  over where that does not work. A crop is cut out and scaled on the graphics chip as well.
+  [How it works and how to build it](docs/decoder.md).
+- **Stream only while an app uses the camera** (optional, in Settings): the phone's camera turns
+  on when Zoom, Meet or another app opens "Plugcam Camera" and off when the app lets go, so Plugcam
+  can stay on in the tray all day.
+- **Crop by drawing a frame on the preview** (also offered upstream,
+  [Qwinty/plugcam#21](https://github.com/Qwinty/plugcam/pull/21)).
+- **A button hides the preview**; nothing over it is blurred on every frame any more, and a picture
+  turned upside down costs no extra pass.
+- **Quitting with the camera on no longer hangs** (also offered upstream,
+  [Qwinty/plugcam#20](https://github.com/Qwinty/plugcam/pull/20)).
+
+Measured on an Intel Core i7-13700K with an NVIDIA RTX 3080 Ti, Galaxy S10, 1080p at 30 fps,
+Plugcam's whole process:
+
+| | Upstream (Windows' decoder) | This fork |
+|---|---|---|
+| Streaming, preview hidden or window in the tray | 458 ms/s of CPU (2.9%) | **118 ms/s (0.7%)** |
+| Streaming with a crop (recording at 30 fps) | ~360–430 ms/s | **~80 ms/s** |
+| Camera on, no app using it | streams anyway | **~10 ms/s, phone's camera off** (on demand) |
+| Decoding one frame | ~10 ms | **~2.4 ms** |
+
+The picture is the same: the decoded frames are identical byte for byte. From the screen to
+"Plugcam Camera" the picture takes about 160 ms, of which the PC adds 5–8 ms; the rest is the
+phone's camera and encoder. These gains were measured on NVIDIA graphics, where Windows' decoder
+keeps its threads busy while the graphics chip works; on AMD or Intel graphics it may already be
+cheap (upstream measured 0.6% of the CPU on a Radeon 780M, see below), so the difference there
+may be small.
+
 <p align="center">
   <img src="docs/screenshots/main-light-en.png" width="860" alt="Plugcam streaming the phone's camera, with controls on the right">
 </p>
